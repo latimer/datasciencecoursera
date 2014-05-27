@@ -1,4 +1,4 @@
-rankHospital <- function(state, outcome, num = "best") {
+rankhospital <- function(state, outcome, num = "best") {
     ## Read outcome data
     usData <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
     ocColumnNames = c("Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack",
@@ -21,20 +21,25 @@ rankHospital <- function(state, outcome, num = "best") {
     }
     ocDf <- data.frame(ocColumnNames, row.names = validOutcomes)
 
-    ## Return hospital name in that state with lowest 30-day death rate
+    ## Return hospital name in that state with the given rank
     colName = as.character(ocDf[outcome, 1])
     stateData = usData[usData$State == state & !is.na(usData[[colName]]),]
     colName = as.character(ocDf[outcome, 1])
     ordered <- stateData[order(stateData[[colName]], stateData$Hospital.Name),]
-    result = ordered
-    if (num == "best") {
-      result = ordered[1, ]
-    } else if (num == "worst") {
-      result = tail(ordered, n = 1L)
-    } else if (num > nrow(ordered)) {
+    index = getRankIndex(num, nrow(ordered))
+    if (index > nrow(ordered)) {
       return(NA)
-    } else {
-      result = ordered[num, ]
     }
-    result[1, "Hospital.Name"]
+    ordered[index, "Hospital.Name"]
 }
+
+  getRankIndex <- function(num, nrow) {
+    if (num == "best") {
+      result = 1
+    } else if (num == "worst") {
+      result = nrow
+    } else {
+      result = num
+    }
+    result
+  }
